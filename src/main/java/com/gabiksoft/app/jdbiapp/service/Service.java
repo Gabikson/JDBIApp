@@ -1,6 +1,8 @@
 package com.gabiksoft.app.jdbiapp.service;
 
 
+import com.gabiksoft.app.jdbiapp.dao.Dao;
+import com.gabiksoft.app.jdbiapp.entity.MyTable;
 import org.postgresql.ds.PGPoolingDataSource;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
@@ -17,10 +19,11 @@ public class Service {
 
     private DataSource source;
     private Handle handle;
+
     private boolean loadDriver() {
         System.out.println("Loading driver...");
         try {
-            Class.forName("org.postgresql.Driver");
+            Class.forName(DB_DRIVER_CLASS);
         } catch (ClassNotFoundException e) {
             System.out.println("Error loading driver: " + e.getMessage());
         return false;
@@ -56,8 +59,29 @@ public class Service {
         System.out.println("Connection opened...");
     }
 
+    public void testMapper() {
+        int id = 0;
+        String name = "test";
+        DBI dbi = new DBI(source);
+        Dao dao = dbi.open(Dao.class);
+        System.out.println("insert id[" + id + "], name[" + name + "]");
+        dao.insert(id, name);
+        System.out.println("Selecting to object \'myTable\'...");
+        MyTable myTable = dao.getById(id);
+        System.out.println("Results from mapper:\n\t" + "myTable.id= " + myTable.getId() + "  myTable.name= " + myTable.getName());
+        dao.delete(myTable);
+        dbi.close(dao);
+    }
+
     public void close(){
         handle.close();
         System.out.println("Connection closed...");
+    }
+
+    public void createTable() {
+        System.out.println("Creating table...");
+        handle.execute("create table if not exists  my_table (id int primary key, name varchar(50))");
+        handle.close();
+        System.out.println("Table created...");
     }
 }
